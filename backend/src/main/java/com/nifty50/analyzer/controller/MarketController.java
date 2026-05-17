@@ -69,14 +69,20 @@ public class MarketController {
     @GetMapping("/quote/{symbol}")
     public ResponseEntity<?> getStockQuote(@PathVariable String symbol) {
         try {
-            log.info("Fetching stock quote for: {}", symbol);
+            // ── Security: sanitize symbol input ───────────────────────────
             if (symbol == null || symbol.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Symbol cannot be empty"));
             }
-            return ResponseEntity.ok(nseService.getStockQuote(symbol));
+            // Allow only uppercase letters, digits, ampersand (for M&M), hyphen — max 20 chars
+            String clean = symbol.toUpperCase().replaceAll("[^A-Z0-9&\\-]", "");
+            if (clean.isBlank() || clean.length() > 20) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid symbol: " + symbol));
+            }
+            log.info("Fetching stock quote for: {}", clean);
+            return ResponseEntity.ok(nseService.getStockQuote(clean));
         } catch (Exception e) {
             log.error("Error fetching quote for {}: {}", symbol, e.getMessage());
-            return error("Failed to fetch quote for " + symbol, e.getMessage(), null);
+            return error("Failed to fetch quote for " + symbol, null, null);
         }
     }
 
@@ -203,8 +209,9 @@ public class MarketController {
     private ResponseEntity<?> error(String error, String message, String hint) {
         var body = new java.util.LinkedHashMap<String, String>();
         body.put("error", error);
-        if (message != null) body.put("message", message);
-        if (hint    != null) body.put("hint", hint);
+        // ── Security: never expose raw exception messages to clients ──────
+        // message is only logged (server-side), never returned to the browser
+        if (hint != null) body.put("hint", hint);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
     }
 }

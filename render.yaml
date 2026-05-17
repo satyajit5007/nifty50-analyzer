@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: nifty50-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /api/market/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod

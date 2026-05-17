@@ -1,0 +1,30 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Frontend build
+frontend/dist/
+frontend/build/
+
+# Java build
+target/
+
+# Logs
+*.log
+
+# Env
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local-only docs (not for public repo)
+DEPLOY.md

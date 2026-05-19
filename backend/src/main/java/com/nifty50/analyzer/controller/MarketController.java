@@ -36,7 +36,7 @@ import java.util.Map;
     "http://localhost:3000",
     "http://localhost:5173",
     "https://nifty50-analyzer.vercel.app",   // ← vercel URL (you'll get it next)
-    "https://nifty50-analyzer-cloud.vercel.app/"
+    "https://nifty50-analyzer-cloud.vercel.app"
 })
 public class MarketController {
 

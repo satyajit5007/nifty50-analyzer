@@ -188,10 +188,13 @@ public class NseService {
      */
     private JsonNode enrichNseIndexData(JsonNode raw) {
         ObjectNode result = objectMapper.createObjectNode();
-        result.put("source",    "NSE");
-        result.put("name",      raw.path("name").asText("NIFTY 50"));
-        result.put("timestamp", raw.path("timestamp").asText(
+        result.put("source",       "NSE");
+        result.put("name",         raw.path("name").asText("NIFTY 50"));
+        result.put("timestamp",    raw.path("timestamp").asText(
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"))));
+        // dataFetchedAt = exact moment backend pulled this from NSE (for debugging staleness)
+        result.put("dataFetchedAt", LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss")));
 
         // The first item in NSE data is the index itself
         JsonNode indexRow = raw.path("data").path(0);
@@ -201,6 +204,9 @@ public class NseService {
 
         // Advance/decline info
         result.set("advance", raw.path("advance"));
+
+        // Index-level lastUpdateTime — used as fallback for stocks that don't carry it
+        String indexLastUpdateTime = indexRow.path("lastUpdateTime").asText("");
 
         // Normalize each stock entry
         ArrayNode dataArray = objectMapper.createArrayNode();
@@ -230,25 +236,26 @@ public class NseService {
             s.put("fiftyTwoWeekHigh",  r2(stock.path("yearHigh").asDouble(0)));
             s.put("fiftyTwoWeekLow",   r2(stock.path("yearLow").asDouble(0)));
 
-            // ── Performance Metrics (NSE-exclusive) ────────────────────────
-            // % change over last 365 days (1 year performance)
-            s.put("perChange365d",     r2(stock.path("perChange365d").asDouble(0)));
-            // % change over last 30 days (1 month performance)
-            s.put("perChange30d",      r2(stock.path("perChange30d").asDouble(0)));
+            // ── Performance Metrics — pass NSE's exact values, no extra rounding ──
+            // r2() on NSE's already-rounded values can cause -5.18 → -5.16 drift
+            s.put("perChange365d",     stock.path("perChange365d").asDouble(0));
+            s.put("perChange30d",      stock.path("perChange30d").asDouble(0));
+            // Reference dates for the performance windows
+            s.put("date365dAgo",       stock.path("date365dAgo").asText(""));
+            s.put("date30dAgo",        stock.path("date30dAgo").asText(""));
 
             // ── Distance from 52W High/Low (NSE-exclusive) ─────────────────
-            // nearWKH = how far (%) stock is FROM its 52W High (negative = below high)
-            // nearWKL = how far (%) stock is FROM its 52W Low  (positive = above low)
             s.put("nearWKH",           r2(stock.path("nearWKH").asDouble(0)));
             s.put("nearWKL",           r2(stock.path("nearWKL").asDouble(0)));
 
-            // ── Timestamp & Meta ───────────────────────────────────────────
-            s.put("lastUpdateTime",    stock.path("lastUpdateTime").asText(""));
+            // ── Timestamp — fallback to index-level time if stock row lacks it ──
+            String stockUpdateTime = stock.path("lastUpdateTime").asText("");
+            s.put("lastUpdateTime",    stockUpdateTime.isBlank() ? indexLastUpdateTime : stockUpdateTime);
+
             // ffmc = Free Float Market Cap (used to compute index weight %)
             s.put("ffmc",              r2(stock.path("ffmc").asDouble(0)));
 
             // ── NSE Chart URL paths (embedded charts) ─────────────────────
-            // These are paths like "/live_charts/..." that render mini-charts
             s.put("chart30dPath",      stock.path("chart30dPath").asText(""));
             s.put("chart365dPath",     stock.path("chart365dPath").asText(""));
             s.put("chartTodayPath",    stock.path("chartTodayPath").asText(""));

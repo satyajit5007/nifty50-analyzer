@@ -36,7 +36,7 @@ public class MarketScheduler {
      * Refresh NIFTY 50 data every 60 seconds.
      * initialDelay=10000 → first run 10s after startup (let app fully start).
      */
-    @Scheduled(fixedRate = 60000, initialDelay = 10000)
+    @Scheduled(fixedRate = 30000, initialDelay = 10000)
     public void refreshNifty50Cache() {
         try {
             log.info("[Scheduler] Evicting & refreshing NIFTY 50 cache...");

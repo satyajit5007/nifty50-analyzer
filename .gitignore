@@ -27,4 +27,6 @@ target/
 Thumbs.db
 
 # Local-only docs (not for public repo)
-DEPLOY.md
+DEPLOY.md
+CLOUD.md
+UNDERSTANDING.md

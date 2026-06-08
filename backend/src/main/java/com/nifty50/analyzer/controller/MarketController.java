@@ -31,13 +31,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/market")
-@CrossOrigin(origins = {
-    // ── Local development ─────────────────────────────
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://nifty50-analyzer.vercel.app",   // ← vercel URL (you'll get it next)
-    "https://nifty50-analyzer-cloudaws.vercel.app"
-})
+@CrossOrigin(origins = "#{'${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}'.split(',')}")
 public class MarketController {
 
     private static final Logger log = LoggerFactory.getLogger(MarketController.class);

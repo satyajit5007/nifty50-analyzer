@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/market")
-@CrossOrigin(origins = "#{'${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}'.split(',')}")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class MarketController {
 
     private static final Logger log = LoggerFactory.getLogger(MarketController.class);

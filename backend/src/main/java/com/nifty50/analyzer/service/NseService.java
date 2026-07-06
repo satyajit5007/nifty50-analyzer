@@ -15,6 +15,7 @@ import org.springframework.http.*;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -191,9 +192,9 @@ public class NseService {
         result.put("source",       "NSE");
         result.put("name",         raw.path("name").asText("NIFTY 50"));
         result.put("timestamp",    raw.path("timestamp").asText(
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"))));
+            LocalDateTime.now(ZoneId.of("Asia/Kolkata")).format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"))));
         // dataFetchedAt = exact moment backend pulled this from NSE (for debugging staleness)
-        result.put("dataFetchedAt", LocalDateTime.now()
+        result.put("dataFetchedAt", LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
             .format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss")));
 
         // The first item in NSE data is the index itself
@@ -384,7 +385,7 @@ public class NseService {
         ObjectNode result = objectMapper.createObjectNode();
         result.put("source",       "YAHOO");
         result.put("name",         "NIFTY 50");
-        result.put("timestamp",    LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss")));
+        result.put("timestamp",    LocalDateTime.now(ZoneId.of("Asia/Kolkata")).format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss")));
         result.put("indexValue",   indexInfo.path("lastPrice").asDouble(0));
         result.put("indexChange",  indexInfo.path("change").asDouble(0));
         result.put("indexPChange", indexInfo.path("pChange").asDouble(0));

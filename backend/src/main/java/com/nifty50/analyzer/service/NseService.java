@@ -466,16 +466,22 @@ public class NseService {
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) return null;
 
             JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode meta = root.path("chart").path("result").path(0).path("meta");
+            JsonNode resultNode = root.path("chart").path("result").path(0);
+            JsonNode meta = resultNode.path("meta");
             if (meta.isMissingNode()) return null;
 
             double lastPrice = meta.path("regularMarketPrice").asDouble(0);
             double prevClose = meta.has("chartPreviousClose") 
                 ? meta.path("chartPreviousClose").asDouble() 
                 : meta.path("previousClose").asDouble(0);
-            double open      = meta.has("regularMarketOpen") 
-                ? meta.path("regularMarketOpen").asDouble() 
-                : (prevClose != 0 ? prevClose : lastPrice);
+            
+            // Extract actual open price from Yahoo Finance indicators array
+            JsonNode quoteNode = resultNode.path("indicators").path("quote").path(0);
+            double open = quoteNode.path("open").path(0).asDouble(
+                meta.has("regularMarketOpen") 
+                    ? meta.path("regularMarketOpen").asDouble() 
+                    : (prevClose != 0 ? prevClose : lastPrice)
+            );
             double dayHigh   = meta.path("regularMarketDayHigh").asDouble(0);
             double dayLow    = meta.path("regularMarketDayLow").asDouble(0);
             double change    = lastPrice - prevClose;

@@ -1,0 +1,38 @@
+name: Deploy Backend to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/nifty50-analyzer
+            git pull origin main
+            
+            # Rebuild the Docker image
+            sudo docker build -t nifty50-backend -f backend/Dockerfile .
+            
+            # Recreate the container
+            sudo docker stop nifty50-satyajit || true
+            sudo docker rm nifty50-satyajit || true
+            
+            sudo docker run -d \
+              -p 127.0.0.1:8080:8080 \
+              --name nifty50-satyajit \
+              --restart unless-stopped \
+              -e CORS_ALLOWED_ORIGINS="https://nifty50-analyzer-aws.vercel.app" \
+              nifty50-backend

@@ -470,8 +470,12 @@ public class NseService {
             if (meta.isMissingNode()) return null;
 
             double lastPrice = meta.path("regularMarketPrice").asDouble(0);
-            double prevClose = meta.path("previousClose").asDouble(0);
-            double open      = meta.path("regularMarketOpen").asDouble(0);
+            double prevClose = meta.has("chartPreviousClose") 
+                ? meta.path("chartPreviousClose").asDouble() 
+                : meta.path("previousClose").asDouble(0);
+            double open      = meta.has("regularMarketOpen") 
+                ? meta.path("regularMarketOpen").asDouble() 
+                : (prevClose != 0 ? prevClose : lastPrice);
             double dayHigh   = meta.path("regularMarketDayHigh").asDouble(0);
             double dayLow    = meta.path("regularMarketDayLow").asDouble(0);
             double change    = lastPrice - prevClose;
